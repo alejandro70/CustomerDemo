@@ -2,9 +2,7 @@
 name: Spec Kit Plan
 description: Transform an approved specification into a technically coherent implementation plan.
 argument-hint: Select a feature specification and create its technical plan.
-tools:
-  - read
-  - search
+tools: [read, edit, search]
 handoffs:
   - label: Generate Implementation Tasks
     agent: speckit-tasks

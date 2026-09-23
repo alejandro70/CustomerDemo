@@ -2,8 +2,8 @@
 
 ## Status
 
-- Specification status: DRAFT
-- Clarification status: BLOCKED
+- Specification status: APPROVED
+- Clarification status: RESOLVED
 
 ## Problem
 
@@ -101,7 +101,9 @@ email records and rejecting incomplete or malformed submissions.
 - **BR-001:** `FirstName` is required to create a customer.
 - **BR-002:** `LastName` is required to create a customer.
 - **BR-003:** `Email` is required to create a customer.
-- **BR-004:** `Email` must have a valid email format to create a customer.
+- **BR-004:** After trimming surrounding whitespace and normalizing to
+  lowercase, `Email` must satisfy the standard ASP.NET Core email-address
+  validation policy to create a customer.
 - **BR-005:** No more than one customer may have the same email address.
 - **BR-006:** A rejected creation request, including a duplicate-email request,
   shall not create a customer record.
@@ -129,7 +131,8 @@ email records and rejecting incomplete or malformed submissions.
 - **EC-001:** A create request missing `FirstName` is invalid.
 - **EC-002:** A create request missing `LastName` is invalid.
 - **EC-003:** A create request missing `Email` is invalid.
-- **EC-004:** A create request with a malformed email is invalid.
+- **EC-004:** A create request whose normalized email fails the standard ASP.NET
+  Core email-address validation policy is invalid.
 - **EC-005:** A create request using an email already associated with a customer
   is rejected and leaves the existing customer unchanged.
 - **EC-006:** A retrieval request for an identifier with no matching customer
@@ -162,8 +165,9 @@ email records and rejecting incomplete or malformed submissions.
 - **AC-003:** Given no customer exists for an `Id`, when a consumer retrieves
   that `Id`, then the response is HTTP 404.
 - **AC-004:** Given a create request with a missing first name, missing last
-  name, missing email, or malformed email, when the consumer submits it, then
-  the response is HTTP 400 and no customer is created.
+  name, missing email, or an email that fails the standard ASP.NET Core
+  email-address validation policy after normalization, when the consumer
+  submits it, then the response is HTTP 400 and no customer is created.
 - **AC-005:** Given a customer exists with an email address, when a consumer
   creates another customer with that email address, then the request is
   rejected and no second customer is created.
@@ -200,13 +204,6 @@ email records and rejecting incomplete or malformed submissions.
 - Email addresses are trimmed and normalized to lowercase before persistence
   and uniqueness comparison.
 
-## Open Questions
-
-- **OQ-003 (BLOCKING, partially resolved):** Email normalization and
-  case-insensitive uniqueness are defined. What exact email syntax validation
-  policy determines whether a normalized email is valid? The resolved portion
-  is traced to BR-008, BR-009, EC-011, and AC-009.
-
 ## Resolved Questions
 
 - **OQ-001 (RESOLVED):** Duplicate normalized emails return HTTP 409 with
@@ -214,6 +211,9 @@ email records and rejecting incomplete or malformed submissions.
   AC-008.
 - **OQ-002 (RESOLVED):** Email uniqueness is case-insensitive. Traced to
   BR-009, EC-008, and AC-008.
+- **OQ-003 (RESOLVED):** After normalization, email syntax is validated using
+  the standard ASP.NET Core email-address validation policy. Traced to BR-004,
+  EC-004, and AC-004.
 - **OQ-004 (RESOLVED):** Whitespace-only names are missing values and return
   HTTP 400. Traced to BR-010, EC-009, and AC-010.
 - **OQ-005 (RESOLVED):** Invalidly formatted customer identifiers return HTTP
