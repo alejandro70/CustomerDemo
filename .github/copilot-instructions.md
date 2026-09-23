@@ -1,5 +1,13 @@
 # Project Instructions
-This repository follows Spec-Driven Development: specify → plan → tasks → implement → converge.
+This repository follows Spec-Driven Development: specify → clarify → plan → tasks → implement → converge.
+
+Run Spec Kit Clarify after Specify and before Plan whenever a specification has
+open questions, ambiguities, contradictions, or incomplete requirements.
+Clarify records questions as `OQ-###`, obtains stakeholder decisions, and
+updates the specification without inventing business decisions. Do not start
+planning while a blocking question could change observable behavior, a business
+rule, security policy, API contract, or required test coverage. Plan may begin
+only after the specification is approved and clarification is resolved.
 
 Authoritative artifacts:
 1. `.spec-driven/constitution.md`
