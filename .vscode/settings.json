@@ -1,0 +1,8 @@
+{
+  "terminal.integrated.env.windows": {
+    "DOTNET_ROOT": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet",
+    "PATH": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet;${env:PATH}"
+  },
+  "dotnetAcquisitionExtension.sharedExistingDotnetPath": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet\\dotnet.exe",
+  "dotnet.defaultSolution": "CustomerDemo.slnx"
+}

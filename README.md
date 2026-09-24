@@ -24,3 +24,23 @@ Run Implement again, then Converge again.
 
 Recommended feature layout:
 `specs/001-feature-name/{spec.md,plan.md,tasks.md}`
+
+## Customer API Operations
+
+The service applies the customer EF Core migration during startup before it
+accepts traffic. Readiness is exposed at `/health/ready` and includes the
+database dependency check.
+
+Configure these values through deployment configuration or secret management:
+
+- `ConnectionStrings__CustomerDatabase`: relational database connection string.
+- `Entra__Authority`: Microsoft Entra OpenID Connect authority.
+- `Entra__Audience`: API application identifier URI or client ID expected by
+	access tokens.
+
+Do not commit production connection strings or credentials. The API requires a
+valid JWT Bearer token; `Customer.Write` is required for `POST /customers` and
+`Customer.Read` is required for `GET /customers/{id}`. Permissions may be
+present in delegated `scp` or application `roles` claims. Routine request
+telemetry records only status, endpoint, and trace identifier; it excludes
+emails, authorization headers, and tokens.

@@ -1,0 +1,25 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio user and workspace state
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# VS Code local state; retain shared workspace settings
+.vscode/*
+!.vscode/settings.json
+
+# Test results and coverage output
+[Tt]est[Rr]esult*/
+*.trx
+coverage/
+coverage.*
+
+# Local SQLite database created by the API default configuration
+*.db
+*.db-shm
+*.db-wal
