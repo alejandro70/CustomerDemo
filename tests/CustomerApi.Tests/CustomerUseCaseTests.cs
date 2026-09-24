@@ -1,4 +1,4 @@
-﻿using CustomerApi.Application.Abstractions;
+using CustomerApi.Application.Abstractions;
 using CustomerApi.Application.CreateCustomer;
 using CustomerApi.Application.GetCustomerById;
 using CustomerApi.Domain;

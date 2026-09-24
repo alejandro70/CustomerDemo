@@ -3,6 +3,16 @@
     "DOTNET_ROOT": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet",
     "PATH": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet;${env:PATH}"
   },
+  "dotnetAcquisitionExtension.existingDotnetPath": [
+    {
+      "extensionId": "ms-dotnettools.csharp",
+      "path": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet\\dotnet.exe"
+    },
+    {
+      "extensionId": "ms-dotnettools.csdevkit",
+      "path": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet\\dotnet.exe"
+    }
+  ],
   "dotnetAcquisitionExtension.sharedExistingDotnetPath": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet\\dotnet.exe",
   "dotnet.defaultSolution": "CustomerDemo.slnx"
 }
