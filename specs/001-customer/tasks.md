@@ -91,3 +91,45 @@
 | NFR-002 | T004, T005, T006, T008 | T006, T008 |
 | NFR-003 | T005, T007 | T005, T007 |
 | EC-001 to EC-012; AC-001 to AC-013 | T002 through T007 | T007 |
+
+## Convergence Remediation Tasks
+
+## RT001 - Complete acceptance-criterion API evidence
+
+- **Problem:** The integration suite passes but does not independently prove every clause of AC-001 through AC-013. It omits individual HTTP cases for each missing or malformed creation field, mutation checks after rejected requests, invalid-token requests, unauthenticated creation, forbidden retrieval, and no-disclosure/no-mutation assertions for both 401 and 403 outcomes. Duplicate tests assert the response but do not verify that only the original relational record remains unchanged.
+- **Affected requirements:** NFR-001, EC-001 through EC-005, EC-007 through EC-010, EC-012, AC-001, AC-004 through AC-008, AC-010, AC-012, AC-013.
+- **Required change:** Expand endpoint integration coverage so every listed acceptance condition and each operation-specific authorization outcome is exercised through the running API and relational store. Assert all required response fields, non-default `CreatedAt`, safe response bodies, and database state after every rejected request.
+- **Validation criteria:** Tests separately prove all invalid-field variants, whitespace-only first and last names, duplicate preservation/count, anonymous and invalid-token POST and GET responses, missing-write and missing-read permission responses, and absence of customer disclosure or mutation. The full solution test run passes.
+- **Dependencies:** T004, T005, T006, T007.
+
+## RT002 - Restrict and verify duplicate-email race translation
+
+- **Problem:** `CustomerRepository` treats every SQLite constraint error with code 19 as a duplicate email. A primary-key, not-null, or other constraint failure can therefore be exposed as HTTP 409 with `CUSTOMER_EMAIL_EXISTS`, contrary to PD-005. No repository or concurrent-insert test exercises database unique-constraint translation.
+- **Affected requirements:** FR-009, BR-005, BR-006, NFR-002, EC-005, EC-008, AC-005, AC-008, PD-005.
+- **Required change:** Identify only the configured email unique-index violation as the duplicate-email outcome and allow unrelated persistence failures to follow generic error handling. Add provider-backed tests for direct and concurrent normalized-email collisions and for a non-email constraint failure.
+- **Validation criteria:** Relational tests prove an email-index collision maps to `CUSTOMER_EMAIL_EXISTS`, exactly one unchanged customer remains after concurrent attempts, and unrelated constraint failures are not mislabeled or leaked. The full solution test run passes.
+- **Dependencies:** T004, T006, RT001.
+
+## RT003 - Verify Entra configuration and JWT rejection paths
+
+- **Problem:** Startup validates only that authority and audience values are present, not that required settings are valid. Authentication tests replace metadata configuration with a symmetric local issuer and do not test malformed, expired, wrong-issuer, wrong-audience, or invalid-signature tokens, leaving the Entra configuration and invalid-token portion of NFR-003 unverified.
+- **Affected requirements:** FR-011, FR-012, NFR-002, NFR-003, EC-012, AC-012, PD-004.
+- **Required change:** Add startup options validation for the non-secret Entra settings and focused authentication tests that preserve the production JWT Bearer validation contract while supplying deterministic Entra-compatible metadata and signing keys.
+- **Validation criteria:** Startup tests fail fast with non-secret diagnostics for absent or invalid authority/audience settings. Authentication tests prove issuer, audience, signature, and lifetime validation and HTTP 401 for each invalid-token class without customer disclosure or mutation.
+- **Dependencies:** T005, T006, RT001.
+
+## RT004 - Complete operational safeguards and deployment verification
+
+- **Problem:** T008 is only partially present. Readiness and limited request-completion logging exist, but there is no deployment or CI verification for ordered migration execution, no startup/configuration coverage, no metrics or distinct structured outcomes for validation, duplicate, authorization, and unhandled failures, and no automated evidence that sensitive values are excluded. Applying migrations in every application startup is also an undocumented deviation from the plan's deployment migration process, and the test run reports that the EF Core model snapshot is missing.
+- **Affected requirements:** NFR-001, NFR-002, NFR-003, PD-001, PD-004, PD-005, T008.
+- **Required change:** Resolve and document the migration ownership deviation, restore migration snapshot/drift verification, add deployment/CI migration and readiness verification, complete the planned outcome telemetry without sensitive fields, and add automated inspection of startup validation and telemetry redaction.
+- **Validation criteria:** A clean deployment check applies the migration before readiness succeeds; EF Core can compare the current model with the migration snapshot without warning; the selected migration ownership model is documented and safe for concurrent instances; tests or deterministic inspection verify required outcome signals and confirm that email values, bearer tokens, authorization headers, and request payloads are absent. The full build and test suites pass.
+- **Dependencies:** T004, T005, T006, RT003.
+
+## RT005 - Add request-outcome metrics required by the technical plan
+
+- **Problem:** Request-outcome logging is implemented and verified, but the plan still requires metrics for request outcome, endpoint, and status code. The current API emits structured logs only and no metric instruments or measurements, leaving the plan's observability contract partially implemented.
+- **Affected requirements:** plan.md Reliability and Observability section; T008 expected result and validation intent.
+- **Required change:** Add metrics instrumentation for request outcomes (at minimum outcome class, endpoint, and status code labels) using .NET metrics/OpenTelemetry-compatible primitives, and ensure the metric path excludes email values, tokens, and authorization header material.
+- **Validation criteria:** Automated verification demonstrates metric emission for success, validation failure, duplicate-email conflict, authentication failure, authorization failure, and unhandled failure paths. Tests or deterministic inspection prove sensitive values are absent from metric labels/tags. Full solution build and test suites pass.
+- **Dependencies:** T008, RT004.

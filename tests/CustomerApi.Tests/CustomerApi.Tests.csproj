@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CustomerApi.Application\CustomerApi.Application.csproj" />
+    <ProjectReference Include="..\..\src\CustomerApi\CustomerApi.csproj" />
   </ItemGroup>
 
 </Project>

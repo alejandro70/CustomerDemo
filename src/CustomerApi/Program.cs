@@ -2,18 +2,28 @@ using CustomerApi;
 using CustomerApi.Application.Abstractions;
 using CustomerApi.Application.CreateCustomer;
 using CustomerApi.Application.GetCustomerById;
+using CustomerApi.Authentication;
 using CustomerApi.Infrastructure;
 using CustomerApi.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("CustomerDatabase")
     ?? throw new InvalidOperationException("ConnectionStrings:CustomerDatabase must be configured.");
-var authority = builder.Configuration["Entra:Authority"]
-    ?? throw new InvalidOperationException("Entra:Authority must be configured.");
-var audience = builder.Configuration["Entra:Audience"]
-    ?? throw new InvalidOperationException("Entra:Audience must be configured.");
+
+builder.Services
+    .AddOptions<EntraAuthenticationOptions>()
+    .BindConfiguration(EntraAuthenticationOptions.SectionName)
+    .Validate(options => EntraAuthenticationOptions.IsValidAuthority(options.Authority),
+        "Entra:Authority must be configured as an absolute https URI.")
+    .Validate(options => EntraAuthenticationOptions.IsValidAudience(options.Audience),
+        "Entra:Audience must be configured as a GUID or absolute URI.")
+    .ValidateOnStart();
+
+var authority = builder.Configuration[$"{EntraAuthenticationOptions.SectionName}:Authority"];
+var audience = builder.Configuration[$"{EntraAuthenticationOptions.SectionName}:Audience"];
 
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
@@ -47,6 +57,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    app.Logger.LogInformation("Applying EF Core migrations before accepting traffic.");
     await scope.ServiceProvider.GetRequiredService<CustomerDbContext>().Database.MigrateAsync();
 }
 
@@ -55,19 +66,32 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.Use(async (context, next) =>
 {
-    await next(context);
-    app.Logger.LogInformation(
-        "Customer API request completed with status {StatusCode} for endpoint {Endpoint} and trace {TraceId}",
-        context.Response.StatusCode,
-        context.GetEndpoint()?.DisplayName ?? "unmatched",
-        context.TraceIdentifier);
+    var endpoint = GetEndpointLabel(context);
+
+    try
+    {
+        await next(context);
+        EmitOutcome(context, endpoint, context.Response.StatusCode);
+    }
+    catch
+    {
+        EmitOutcome(context, endpoint, StatusCodes.Status500InternalServerError);
+        throw;
+    }
 });
-    app.UseAuthorization();
+app.UseAuthorization();
 app.MapCustomerEndpoints();
+
+if (app.Environment.IsEnvironment("Testing"))
+{
+    app.MapGet("/testing/unhandled", (HttpContext _) => throw new InvalidOperationException("Simulated unhandled failure for integration testing."));
+}
+
 app.MapHealthChecks("/health/ready");
 
 app.Run();
@@ -78,6 +102,31 @@ static bool HasPermission(System.Security.Claims.ClaimsPrincipal user, string re
         claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries).Contains(requiredPermission, StringComparer.Ordinal) ||
         (claim.Type is "roles" or "http://schemas.microsoft.com/ws/2008/06/identity/claims/role") &&
         string.Equals(claim.Value, requiredPermission, StringComparison.Ordinal));
+
+static void EmitOutcome(HttpContext context, string endpoint, int statusCode)
+{
+    var outcome = RequestOutcomeClassifier.Classify(statusCode);
+    RequestOutcomeMetrics.Record(outcome, endpoint, statusCode);
+    context.RequestServices
+        .GetRequiredService<ILoggerFactory>()
+        .CreateLogger("CustomerApi.RequestOutcomes")
+        .LogInformation(
+            "Customer API request outcome {Outcome} with status {StatusCode} for endpoint {Endpoint} and trace {TraceId}",
+            outcome,
+            statusCode,
+            endpoint,
+            context.TraceIdentifier);
+}
+
+static string GetEndpointLabel(HttpContext context)
+{
+    if (context.GetEndpoint() is RouteEndpoint routeEndpoint)
+    {
+        return routeEndpoint.RoutePattern.RawText ?? routeEndpoint.DisplayName ?? "unmatched";
+    }
+
+    return context.GetEndpoint()?.DisplayName ?? "unmatched";
+}
 
 public partial class Program
 {

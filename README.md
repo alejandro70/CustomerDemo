@@ -31,6 +31,16 @@ The service applies the customer EF Core migration during startup before it
 accepts traffic. Readiness is exposed at `/health/ready` and includes the
 database dependency check.
 
+Migration ownership model:
+
+- Application startup owns migration execution through `Database.MigrateAsync`
+	before endpoint mapping accepts requests.
+- This repository verifies the behavior through integration tests that assert
+	readiness succeeds only after the initial migration is applied.
+- The approach is safe for concurrent instances because migration state is
+	tracked in `__EFMigrationsHistory`; once the first instance applies pending
+	migrations, later instances observe no pending changes.
+
 Configure these values through deployment configuration or secret management:
 
 - `ConnectionStrings__CustomerDatabase`: relational database connection string.
@@ -42,5 +52,6 @@ Do not commit production connection strings or credentials. The API requires a
 valid JWT Bearer token; `Customer.Write` is required for `POST /customers` and
 `Customer.Read` is required for `GET /customers/{id}`. Permissions may be
 present in delegated `scp` or application `roles` claims. Routine request
-telemetry records only status, endpoint, and trace identifier; it excludes
-emails, authorization headers, and tokens.
+telemetry records request-outcome logs and metrics tagged only with outcome,
+endpoint pattern, and status code; it excludes emails, authorization headers,
+request payloads, and tokens.
