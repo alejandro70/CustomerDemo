@@ -31,6 +31,25 @@ public sealed class CustomerRepository(CustomerDbContext dbContext) : ICustomerS
         }
     }
 
+    public async Task<CustomerStoreUpdateResult> UpdateAsync(Customer customer, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return CustomerStoreUpdateResult.Updated;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            dbContext.Entry(customer).State = EntityState.Detached;
+            return CustomerStoreUpdateResult.ConcurrencyConflict;
+        }
+        catch (DbUpdateException exception) when (IsUniqueConstraintViolation(exception))
+        {
+            dbContext.Entry(customer).State = EntityState.Detached;
+            return CustomerStoreUpdateResult.DuplicateEmail;
+        }
+    }
+
     private static bool IsUniqueConstraintViolation(DbUpdateException exception)
     {
         if (exception.InnerException is not SqliteException sqliteException)

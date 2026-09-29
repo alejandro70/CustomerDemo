@@ -14,5 +14,9 @@
     }
   ],
   "dotnetAcquisitionExtension.sharedExistingDotnetPath": "C:\\Users\\jairo.espitia\\AppData\\Local\\Microsoft\\dotnet\\dotnet.exe",
-  "dotnet.defaultSolution": "CustomerDemo.slnx"
+  "dotnet.defaultSolution": "CustomerDemo.slnx",
+  "chat.tools.terminal.autoApprove": {
+    "dotnet build": true,
+    "dotnet test": true
+  }
 }

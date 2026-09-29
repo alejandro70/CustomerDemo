@@ -16,6 +16,9 @@ public sealed class CustomerDbContext(DbContextOptions<CustomerDbContext> option
         customer.Property(item => item.LastName).IsRequired();
         customer.Property(item => item.Email).IsRequired();
         customer.Property(item => item.CreatedAt).IsRequired();
+        customer.Property(item => item.Version)
+            .IsRequired()
+            .IsConcurrencyToken();
         customer.HasIndex(item => item.Email)
             .HasDatabaseName(CustomerRepository.EmailUniqueIndexName)
             .IsUnique();

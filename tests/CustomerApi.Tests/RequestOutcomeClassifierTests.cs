@@ -6,7 +6,7 @@ public sealed class RequestOutcomeClassifierTests
     [InlineData(400, "validation_failure")]
     [InlineData(401, "authentication_failure")]
     [InlineData(403, "authorization_failure")]
-    [InlineData(409, "duplicate_email_conflict")]
+    [InlineData(409, "conflict")]
     [InlineData(500, "unhandled_failure")]
     [InlineData(503, "unhandled_failure")]
     [InlineData(200, "success_or_other")]

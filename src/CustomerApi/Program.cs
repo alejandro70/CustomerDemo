@@ -2,6 +2,7 @@ using CustomerApi;
 using CustomerApi.Application.Abstractions;
 using CustomerApi.Application.CreateCustomer;
 using CustomerApi.Application.GetCustomerById;
+using CustomerApi.Application.UpdateCustomer;
 using CustomerApi.Authentication;
 using CustomerApi.Infrastructure;
 using CustomerApi.Infrastructure.Persistence;
@@ -33,6 +34,7 @@ builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<IIdentifierGenerator, GuidIdentifierGenerator>();
 builder.Services.AddScoped<CreateCustomerUseCase>();
 builder.Services.AddScoped<GetCustomerByIdUseCase>();
+builder.Services.AddScoped<UpdateCustomerUseCase>();
 builder.Services.AddHealthChecks().AddDbContextCheck<CustomerDbContext>();
 
 builder.Services

@@ -37,6 +37,10 @@ partial class CustomerDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT");
 
+            b.Property<long>("Version")
+                .IsConcurrencyToken()
+                .HasColumnType("INTEGER");
+
             b.HasKey("Id");
 
             b.HasIndex("Email")

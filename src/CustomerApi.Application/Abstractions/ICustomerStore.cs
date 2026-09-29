@@ -9,10 +9,19 @@ public interface ICustomerStore
     Task<Customer?> GetByEmailAsync(string normalizedEmail, CancellationToken cancellationToken);
 
     Task<CustomerStoreAddResult> AddAsync(Customer customer, CancellationToken cancellationToken);
+
+    Task<CustomerStoreUpdateResult> UpdateAsync(Customer customer, CancellationToken cancellationToken);
 }
 
 public enum CustomerStoreAddResult
 {
     Added,
     DuplicateEmail
+}
+
+public enum CustomerStoreUpdateResult
+{
+    Updated,
+    DuplicateEmail,
+    ConcurrencyConflict
 }
